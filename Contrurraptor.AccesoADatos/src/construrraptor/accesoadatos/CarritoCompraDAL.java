@@ -125,109 +125,107 @@ public class CarritoCompraDAL {
         ArrayList<CarritoCompras> Carrito = new ArrayList();
         try (Connection con = ComunDB.obtenerConexion();) {
             String sql = ObtenerSelect(pCarrito);
-            sql += "WHERE r.Id_carrito_compra=?";
+            sql += "WHERE r.Id_carrito_compra=?,?,?,?,?";
             try (PreparedStatement ps = ComunDB.createPreparedStatement(con, sql)) {
-ps.setInt();
+                ps.setInt(1, pCarrito.getId_carrito_compra());
+                ps.setInt(2, pCarrito.getId_usuario());
+                ps.setInt(3, pCarrito.getId_producto());
+                ps.setInt(4, pCarrito.getCantidad());
+                // No se como se hace para las fechas ;(
+                ObtenerDatos(ps, Carrito);
+                ps.close();
             } catch (Exception e) {
                 System.err.println("Error el el ´PreparedStatement ps = ComunDB.createPreparedStatement(con, sql)´: " + e);
-                
+
+            }
+            con.close();
+        } catch (Exception e) {
+            System.err.println("Error en el ´WHERE r.Id_carrito_compra=?,?,?,?,?´: " + e);
+        }
+        return carrito;
+    }
+
+    public static CarritoCompras obtenerPorId(CarritoCompras pCarrito) throws Exception {
+        CarritoCompras Carrito = new CarritoCompras();
+        ArrayList<CarritoCompras> Carritos = new ArrayList();
+        try (Connection con = ComunDB.obtenerConexion();) {
+            String sql = ObtenerSelect(pCarrito);
+            sql += "WHERE r.Id_carrito_compra=?";
+            try (PreparedStatement ps = ComunDB.createPreparedStatement(con, sql);) {
+                ps.setInt(1, pCarrito.getId_carrito_compra());
+                ObtenerDatos(ps, Carritos);
+                ps.close();
+            } catch (Exception e) {
+                System.err.println("Error en el ´PreparedStatement ps = ComunDB.createPreparedStatement(con, sql);´: " + e);
+            }
+            con.close();
+            if (Carritos.size() > 0) {
+                Carrito = Carritos.get(0);
             }
         } catch (Exception e) {
             System.err.println("Error en el ´WHERE r.Id_carrito_compra=?´: " + e);
         }
-        
+        return Carrito;
+    }
+
+    public static ArrayList<CarritoCompras> ObtenerTodos() throws Exception {
+        ArrayList<CarritoCompras> Carrito;
+        Carrito = new ArrayList<>();
+        try (Connection con = ComunDB.obtenerConexion();) {
+            String sql = ObtenerSelect(new CarritoCompras());
+            try (PreparedStatement ps = ComunDB.createPreparedStatement(con, sql)) {
+                ObtenerDatos(ps, Carrito);
+                ps.close();
+            } catch (Exception e) {
+                System.err.println("Error en el ´PreparedStatement ps = ComunDB.createPreparedStatement(con, sql´: " + e);
+            }
+            con.close();
+        } catch (Exception e) {
+            System.err.println("Error en el ´String sql = ObtenerSelect(new CarritoCompras());´. " + e);
+        }
+        return Carrito;
+    }
+
+    static void QuerySelect(CarritoCompras pCarrito, ComunDB.UtilQuery pUtilQuery) throws SQLException {
+        PreparedStatement ps = pUtilQuery.getStatement();
+        if (pCarrito.getId_carrito_compra() > 0) {
+            pUtilQuery.AgregarWhereAnd("r.Id_carrito_compras");
+            if (ps != null) {
+                ps.setInt(pUtilQuery.getNumWhere(), pCarrito.getId_carrito_compra());
+            }
+        }
+
+        if (pCarrito.getId_usuario() > 0) {
+            pUtilQuery.AgregarWhereAnd("r.Id_usuario");
+            if (ps != null) {
+                ps.setInt(pUtilQuery.getNumWhere(), pCarrito.getId_usuario());
+            }
+        }
+    }
+
+    public static ArrayList<CarritoCompras> Buscar(CarritoCompras pCarrito) throws Exception {
+        ArrayList<CarritoCompras> Carrito = new ArrayList<>();
+        try (Connection con = ComunDB.obtenerConexion();) {
+            String sql = ObtenerSelect(pCarrito);
+            ComunDB comun = new ComunDB();
+            ComunDB.UtilQuery utilQuery = comun.new UtilQuery(sql, null, 0);
+            QuerySelect(pCarrito, utilQuery);
+            sql = utilQuery.getSQL();
+            sql += AgregarOrderBy(pCarrito);
+            try (PreparedStatement ps = ComunDB.createPreparedStatement(con, sql);) {
+                utilQuery.setStatement(ps);
+                utilQuery.setSQL(null);
+                utilQuery.setNumWhere(0);
+                QuerySelect(pCarrito, utilQuery);
+                ObtenerDatos(ps, Carrito);
+                ps.close();
+            } catch (Exception e) {
+                System.err.println("Error en el ´PreparedStatement ps = ComunDB.createPreparedStatement(con, sql)´: " + e);
+            }
+            con.close();
+        } catch (Exception e) {
+            System.err.println("Error en el ´Connection con = ComunDB.obtenerConexion();´: " + e);
+        }
+        return Carrito;
     }
 }
-
-//    // Metodo para obtener por Id un registro de la tabla de Rol 
-//    public static CarritoCompras obtenerPorId(CarritoCompras pCarrito) throws Exception {
-//        CarritoCompras Carrito = new CarritoCompras();
-//        ArrayList<CarritoCompras> roles = new ArrayList();
-//        try (Connection conn = ComunDB.obtenerConexion();) { // Obtener la conexion desde la clase ComunDB y encerrarla en try para cierre automatico
-//            String sql = obtenerSelect(pCarrito); // Obtener la consulta SELECT de la tabla Rol
-//            sql += " WHERE r.Id=?"; // Concatenar a la consulta SELECT de la tabla Rol el WHERE 
-//            try (PreparedStatement ps = ComunDB.createPreparedStatement(conn, sql);) { // Obtener el PreparedStatement desde la clase ComunDB
-//                ps.setInt(1, pCarrito.getId_carrito_compra()); // Agregar el parametro a la consulta donde estan el simbolo ? #1 
-//                obtenerDatos(ps, roles); // Llenar el ArrayList de Rol con las fila que devolvera la consulta SELECT a la tabla de Rol
-//                ps.close(); // Cerrar el PreparedStatement
-//            } catch (SQLException ex) {
-//                throw ex;  // Enviar al siguiente metodo el error al ejecutar PreparedStatement en el caso que suceda
-//            }
-//            conn.close();  // Cerrar la conexion a la base de datos
-//        } catch (SQLException ex) {
-//            throw ex; // Enviar al siguiente metodo el error al obtener la conexion  de la clase ComunDB en el caso que suceda
-//        }
-//        if (roles.size() > 0) { // Verificar si el ArrayList de Rol trae mas de un registro en tal caso solo debe de traer uno
-//            Carrito = roles.get(0); // Si el ArrayList de Rol trae un registro o mas obtenemos solo el primero 
-//        }
-//        return Carrito; // Devolver el rol encontrado por Id 
-//    }
-//
-//    // Metodo para obtener todos los registro de la tabla de Rol
-//    public static ArrayList<CarritoCompras> obtenerTodos() throws Exception {
-//        ArrayList<CarritoCompras> Carrito;
-//        Carrito = new ArrayList<>();
-//        try (Connection conn = ComunDB.obtenerConexion();) {// Obtener la conexion desde la clase ComunDB y encerrarla en try para cierre automatico
-//            String sql = obtenerSelect(new CarritoCompras());  // Obtener la consulta SELECT de la tabla Rol
-//            sql += agregarOrderBy(new CarritoCompras());  // Concatenar a la consulta SELECT de la tabla Rol el ORDER BY por Id 
-//            try (PreparedStatement ps = ComunDB.createPreparedStatement(conn, sql);) { // Obtener el PreparedStatement desde la clase ComunDB
-//                obtenerDatos(ps, Carrito); // Llenar el ArrayList de Rol con las fila que devolvera la consulta SELECT a la tabla de Rol
-//                ps.close(); // Cerrar el PreparedStatement
-//            } catch (SQLException ex) {
-//                throw ex; // Enviar al siguiente metodo el error al ejecutar PreparedStatement en el caso que suceda
-//            }
-//            conn.close(); // Cerrar la conexion a la base de datos
-//        } catch (SQLException ex) {
-//            throw ex; // Enviar al siguiente metodo el error al obtener la conexion  de la clase ComunDB en el caso que suceda
-//        }
-//        return Carrito; // Devolver el ArrayList de Rol
-//    }
-//
-//    // Metodo para asignar los filtros de la consulta SELECT de la tabla de Rol de forma dinamica
-//    static void querySelect(CarritoCompras pCarrito, ComunDB.UtilQuery pUtilQuery) throws SQLException {
-//        PreparedStatement statement = pUtilQuery.getStatement(); // Obtener el PreparedStatement al cual aplicar los parametros
-//        if (pCarrito.getId_carrito_compra() > 0) { // Verificar si se va incluir el campo Id en el filtro de la consulta SELECT de la tabla de Rol
-//            pUtilQuery.AgregarWhereAnd(" r.Id=? "); // Agregar el campo Id al filtro de la consulta SELECT y agregar en el WHERE o AND
-//            if (statement != null) {
-//                // Agregar el parametro del campo Id a la consulta SELECT de la tabla de Rol
-//                statement.setInt(pUtilQuery.getNumWhere(), pCarrito.getId_carrito_compra());
-//            }
-//        }
-//        // Verificar si se va incluir el campo Nombre en el filtro de la consulta SELECT de la tabla de Rol
-//        if (pCarrito.getId_usuario() != 0) {
-//            pUtilQuery.AgregarWhereAnd(" r.Nombre LIKE ? "); // Agregar el campo Nombre al filtro de la consulta SELECT y agregar en el WHERE o AND
-//            if (statement != null) {
-//                // Agregar el parametro del campo Nombre a la consulta SELECT de la tabla de Rol
-//                statement.setString(pUtilQuery.getNumWhere(), "%" + pCarrito.getId_usuario() + "%");
-//            }
-//        }
-//    }
-//
-//    // Metodo para obtener todos los registro de la tabla de Rol que cumplan con los filtros agregados 
-//    // a la consulta SELECT de la tabla de Rol 
-//    public static ArrayList<CarritoCompras> buscar(CarritoCompras pCarrito) throws Exception {
-//        ArrayList<CarritoCompras> roles = new ArrayList();
-//        try (Connection conn = ComunDB.obtenerConexion();) { // Obtener la conexion desde la clase ComunDB y encerrarla en try para cierre automatico
-//            String sql = obtenerSelect(pCarrito); // Obtener la consulta SELECT de la tabla Rol
-//            ComunDB comundb = new ComunDB();
-//            ComunDB.UtilQuery utilQuery = comundb.new UtilQuery(sql, null, 0);
-//            querySelect(pCarrito, utilQuery); // Asignar el filtro a la consulta SELECT de la tabla de Rol 
-//            sql = utilQuery.getSQL();
-//            sql += agregarOrderBy(pCarrito); // Concatenar a la consulta SELECT de la tabla Rol el ORDER BY por Id
-//            try (PreparedStatement ps = ComunDB.createPreparedStatement(conn, sql);) { // Obtener el PreparedStatement desde la clase ComunDB
-//                utilQuery.setStatement(ps);
-//                utilQuery.setSQL(null);
-//                utilQuery.setNumWhere(0);
-//                querySelect(pCarrito, utilQuery);  // Asignar los parametros al PreparedStatement de la consulta SELECT de la tabla de Rol
-//                obtenerDatos(ps, roles); // Llenar el ArrayList de Rol con las fila que devolvera la consulta SELECT a la tabla de Rol
-//                ps.close(); // Cerrar el PreparedStatement
-//            } catch (SQLException ex) {
-//                throw ex;  // Enviar al siguiente metodo el error al ejecutar PreparedStatement en el caso que suceda
-//            }
-//            conn.close(); // Cerrar la conexion a la base de datos
-//        } catch (SQLException ex) {
-//            throw ex; // Enviar al siguiente metodo el error al obtener la conexion  de la clase ComunDB en el caso que suceda
-//        }
-//        return roles; // Devolver el ArrayList de Rol
-//    }
-//}
