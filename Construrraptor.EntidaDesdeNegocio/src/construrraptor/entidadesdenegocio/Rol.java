@@ -6,7 +6,7 @@ package construrraptor.entidadesdenegocio;
 
 /**
  *
- * @author H
+ * Otoniel
  */
 public class Rol {
     private int idRol;

@@ -1,4 +1,4 @@
-package construrraptor.accesoadatos;
+ package construrraptor.accesoadatos;
 
 import java.sql.*;
 

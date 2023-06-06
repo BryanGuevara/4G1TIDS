@@ -6,7 +6,7 @@ package construrraptor.entidadesdenegocio;
 
 /**
  *
- * @author H
+ * Otoniel
  */
 import java.util.Date;
 

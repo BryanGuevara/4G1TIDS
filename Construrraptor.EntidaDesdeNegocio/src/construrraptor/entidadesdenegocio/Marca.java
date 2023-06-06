@@ -6,7 +6,7 @@ package construrraptor.entidadesdenegocio;
 
 /**
  *
- * @author H
+ *Otoniel
  */
 public class Marca {
     private int idMarca;
